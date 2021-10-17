@@ -137,6 +137,9 @@ type Runner struct {
 	// Fake signal callbacks
 	callbackErr  string
 	callbackExit string
+
+	// xtrace is true if shell "xtrace" is enabled
+	xtrace bool
 }
 
 type alias struct {
@@ -182,6 +185,12 @@ func New(opts ...RunnerOption) (*Runner, error) {
 	}
 	if r.stdout == nil || r.stderr == nil {
 		StdIO(r.stdin, r.stdout, r.stderr)(r)
+	}
+
+	if r.opts[optXTrace] {
+		// when shell has tracing enabled, either via `set -o xtrace`
+		// or its shorthand `set -x`
+		r.xtrace = true
 	}
 	return r, nil
 }
@@ -350,6 +359,7 @@ var shellOptsTable = [...]struct {
 	{'n', "noexec"},
 	{'f', "noglob"},
 	{'u', "nounset"},
+	{'x', "xtrace"},
 	{' ', "pipefail"},
 }
 
@@ -369,6 +379,7 @@ const (
 	optNoExec
 	optNoGlob
 	optNoUnset
+	optXTrace
 	optPipeFail
 
 	optExpandAliases

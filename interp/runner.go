@@ -338,6 +338,7 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 				vr := r.assignVal(as, "")
 				r.setVar(as.Name.Value, as.Index, vr)
 			}
+			r.traceExpr(x)
 			break
 		}
 
@@ -359,6 +360,7 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 
 			r.setVarInternal(name, vr)
 		}
+		r.traceExpr(x)
 		r.call(ctx, x.Args[0].Pos(), fields)
 		for _, restore := range restores {
 			r.setVarInternal(restore.name, restore.vr)
@@ -439,6 +441,7 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 			}
 			for _, field := range items {
 				r.setVarString(name, field)
+				r.traceExpr(cm)
 				if r.loopStmtsBroken(ctx, x.Do) {
 					break
 				}
@@ -461,12 +464,14 @@ func (r *Runner) cmd(ctx context.Context, cm syntax.Command) {
 	case *syntax.ArithmCmd:
 		r.exit = oneIf(r.arithm(x.X) == 0)
 	case *syntax.LetClause:
+		r.traceExpr(cm)
 		var val int
 		for _, expr := range x.Exprs {
 			val = r.arithm(expr)
 		}
 		r.exit = oneIf(val == 0)
 	case *syntax.CaseClause:
+		r.traceExpr(cm)
 		str := r.literal(x.Word)
 		for _, ci := range x.Items {
 			for _, word := range ci.Patterns {
